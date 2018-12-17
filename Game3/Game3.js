@@ -6,12 +6,24 @@ const FRAMES_PER_SECOND = 30;
 var carPic = document.createElement("img");
 var carPicLoaded = false;
 
+const GROUNDSPEED_DECAY_MULT = 0.94;
+
+// consts for key pressing
+const KEY_LEFT_ARROW = 37;
+const KEY_UP_ARROW = 38;
+const KEY_RIGHT_ARROW = 39;
+const KEY_DOWN_ARROW = 40;
+
 var carX = 300;
 var carY = 350;
 var carAng = 0;
+var carSpeed = 1;
 
-var ballSpeedX = 0;
-var ballSpeedY = 0;
+// key beign held
+var	keyHeld_Gas	= false;
+var	keyHeld_Reverse = false;
+var keyHeld_TurnLeft = false;
+var keyHeld_TurnRight =	false;
 
 const TRACK_W = 40;
 const TRACK_H = 40;
@@ -45,7 +57,9 @@ window.onload = function(){
     canvas = document.getElementById('gameCanvas');
     canvasContext = canvas.getContext('2d');
 
-    reset();
+    // functions
+    document.addEventListener("keydown", keyPressed);
+    document.addEventListener("keyup", keyReleased);
 
     carPic.src = "player1.png";
 
@@ -56,58 +70,34 @@ window.onload = function(){
         }, 1000/FRAMES_PER_SECOND);
 }
 
-function ballAtTile(){
-    // get the row and the collum of the ball
-    let col = Math.floor(carX/TRACK_W);
-    let row = Math.floor(carY/TRACK_H);
-    // make it visable for debug purposes
-    canvasContext.fillStyle = 'yellow';
-    canvasContext.fillText('(row, col) = ('+row+', '+col+')', 715, 10);
-    return {row: row, col: col}
+//carSpeed += 1.5; carAng += 0.25*Math.PI;
+// keyboard functions
+function keyPressed(evt){
+    document.getElementById("debugText").innerHTML = "KeyCode Pushed: " + evt.keyCode;
+    
+    if (evt.keyCode == KEY_UP_ARROW)
+        keyHeld_Gas = true;
+    if (evt.keyCode == KEY_DOWN_ARROW)
+        keyHeld_Reverse = true;
+    if (evt.keyCode == KEY_LEFT_ARROW)
+        keyHeld_TurnLeft = true;
+    if (evt.keyCode == KEY_RIGHT_ARROW)
+        keyHeld_TurnRight = true;
+
+    evt.preventDefault();
 }
-function trackTileToIndex(tileCol, tileRow){
-    return tileCol + (TRACK_COLS*tileRow);
-}
-// delete and bounce of track function
-function deletetrack(){
-    if (carX < canvas.width && carY < (TRACK_H*TRACK_ROWS) + TRACK_H){
-        tile = ballAtTile();
-        let index = trackTileToIndex(tile.col, tile.row);
 
-        //pg 117
-        let bothTestsFailed = true;
+function keyReleased(evt){
+    document.getElementById("debugText").innerHTML = "KeyCode Released: " + evt.keyCode;
 
-        if(trackGrid[index]){
-            let prevTileCol = Math.floor((carX-ballSpeedX)/TRACK_W);
-            let prevTileRow = Math.floor((carY-ballSpeedY)/TRACK_H);
-            
-            
-            // bola mudou de coluna
-            if (prevTileCol != tile.col){
-            let adjacentTrackIndex = trackTileToIndex(prevTileCol, tile.row);
-                // se o track passado horizontalmente for false
-            if (!trackGrid[adjacentTrackIndex]){
-                    ballSpeedX *= -1;
-                    bothTestsFailed = false;
-                }
-            }
-            // bola mudou de fila
-            if (prevTileRow != tile.row){
-            let adjacentTrackIndex = trackTileToIndex(tile.col, prevTileRow);
-                // se o track passado verticalmenta for false
-            if (!trackGrid[adjacentTrackIndex]){
-                    ballSpeedY *= -1;
-                    bothTestsFailed = false;
-                }
-            }
-
-            if(bothTestsFailed){
-                ballSpeedX *= -1;
-                ballSpeedY *= -1;
-            }
-        }
-
-    }
+    if (evt.keyCode == KEY_UP_ARROW)
+        keyHeld_Gas = false;
+    if (evt.keyCode == KEY_DOWN_ARROW)
+        keyHeld_Reverse = false;
+    if (evt.keyCode == KEY_LEFT_ARROW)
+        keyHeld_TurnLeft = false;
+    if (evt.keyCode == KEY_RIGHT_ARROW)
+        keyHeld_TurnRight = false;
 }
 
 // DRAW FUNCTIONS
@@ -120,15 +110,10 @@ function drawEverything(){
     // Draw Car if loaded
     if(carPicLoaded)
     carDraw();
-    // Delete track
-    deletetrack();
 }
-
 function carDraw(){
-    carAng += 0.2;
     drawBitmapCenteredAtLocationWithRotation(carPic, carX, carY, carAng);
 }
-
 function drawBitmapCenteredAtLocationWithRotation(graphic, atX, atY, angle){
     canvasContext.save();
     canvasContext.translate(atX, atY);
@@ -136,7 +121,6 @@ function drawBitmapCenteredAtLocationWithRotation(graphic, atX, atY, angle){
     canvasContext.drawImage(graphic,-graphic.width/2,-graphic.height/2);
     canvasContext.restore();
 }
-
 function drawTracks(){
     let counter  = 0;
     for (let i = 0; i < TRACK_ROWS; i++){
@@ -147,42 +131,27 @@ function drawTracks(){
             else if (trackGrid[counter] === 0)
                 canvasContext.fillStyle = 'black';    
 
+        //  drawing 
         canvasContext.fillRect((j*TRACK_W), (i*TRACK_H), TRACK_W-TRACK_GAP, TRACK_H-TRACK_GAP);
-            //  drawing
-                        
         }
     }
 }
+
 // MOVE FUNTIONS
 function moveEveryThing(){
-    ballMove();
+    if (keyHeld_Gas)
+        carSpeed += 0.5;
+    if (keyHeld_Reverse)
+        carSpeed += -0.5;
+    if (keyHeld_TurnLeft)
+        carAng += -0.03*Math.PI;
+    if (keyHeld_TurnRight)
+        carAng += 0.03*Math.PI;
+    
+    moveCar();
 }
 
-function ballMove(){
-    // rebater nas paredes
-    if (carX < 0 || carX > canvas.width){
-        ballSpeedX *= -1;
-    }
-    // rebater no teto
-    if (carY < 0 ){
-        ballSpeedY *= -1;
-    }
-    // passou do chao
-    if (carY > canvas.height){
-        reset();
-    }
-    // fazer a bola andar
-    carX += ballSpeedX;
-    carY += ballSpeedY;
-}
-
-// RESETING FUNCTIONS
-function reset(){
-    ballReset();
-}
-function ballReset(){
-    carX = 300;
-    carY = 300;
-    ballSpeedX = 6;
-    ballSpeedY = 4;
+function moveCar(){
+    carX += Math.cos(carAng) * carSpeed;
+    carY += Math.sin(carAng) * carSpeed;
 }
