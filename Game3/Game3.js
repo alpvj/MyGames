@@ -149,6 +149,7 @@ function moveEveryThing(){
         carAng += 0.03*Math.PI;
     
     moveCar();
+    carSpeed *= GROUNDSPEED_DECAY_MULT;
 }
 
 function moveCar(){
