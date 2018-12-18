@@ -7,6 +7,10 @@ var carPic = document.createElement("img");
 var carPicLoaded = false;
 
 const GROUNDSPEED_DECAY_MULT = 0.94;
+const DRIVE_POWER = 0.5;
+const REVERSE_POWER = -0.2;
+const TURN_RATE = 0.03;
+const MIN_TURN_SPEED = 0.5;
 
 // consts for key pressing
 const KEY_LEFT_ARROW = 37;
@@ -74,30 +78,25 @@ window.onload = function(){
 // keyboard functions
 function keyPressed(evt){
     document.getElementById("debugText").innerHTML = "KeyCode Pushed: " + evt.keyCode;
-    
-    if (evt.keyCode == KEY_UP_ARROW)
-        keyHeld_Gas = true;
-    if (evt.keyCode == KEY_DOWN_ARROW)
-        keyHeld_Reverse = true;
-    if (evt.keyCode == KEY_LEFT_ARROW)
-        keyHeld_TurnLeft = true;
-    if (evt.keyCode == KEY_RIGHT_ARROW)
-        keyHeld_TurnRight = true;
-
+    // If key is pressed make it true
+    setKeyHoldState(evt.keyCode, true);
     evt.preventDefault();
 }
-
 function keyReleased(evt){
     document.getElementById("debugText").innerHTML = "KeyCode Released: " + evt.keyCode;
+    // When a key pressed is released, make it false
+    setKeyHoldState(evt.keyCode, false);
+}
 
-    if (evt.keyCode == KEY_UP_ARROW)
-        keyHeld_Gas = false;
-    if (evt.keyCode == KEY_DOWN_ARROW)
-        keyHeld_Reverse = false;
-    if (evt.keyCode == KEY_LEFT_ARROW)
-        keyHeld_TurnLeft = false;
-    if (evt.keyCode == KEY_RIGHT_ARROW)
-        keyHeld_TurnRight = false;
+function setKeyHoldState(thisKey, boolean){
+    if (thisKey == KEY_UP_ARROW)
+        keyHeld_Gas = boolean;
+    else if (thisKey == KEY_DOWN_ARROW)
+        keyHeld_Reverse = boolean;
+    else if (thisKey == KEY_LEFT_ARROW)
+        keyHeld_TurnLeft = boolean;
+    else if (thisKey == KEY_RIGHT_ARROW)
+        keyHeld_TurnRight = boolean;
 }
 
 // DRAW FUNCTIONS
@@ -140,14 +139,15 @@ function drawTracks(){
 // MOVE FUNTIONS
 function moveEveryThing(){
     if (keyHeld_Gas)
-        carSpeed += 0.5;
+        carSpeed += DRIVE_POWER;
     if (keyHeld_Reverse)
-        carSpeed += -0.5;
-    if (keyHeld_TurnLeft)
-        carAng += -0.03*Math.PI;
-    if (keyHeld_TurnRight)
-        carAng += 0.03*Math.PI;
-    
+        carSpeed += REVERSE_POWER;
+    if (Math.abs(carSpeed) >= MIN_TURN_SPEED){
+        if (keyHeld_TurnLeft)
+            carAng += -TURN_RATE*Math.PI;
+        if (keyHeld_TurnRight)
+            carAng += TURN_RATE*Math.PI;
+    }
     moveCar();
     carSpeed *= GROUNDSPEED_DECAY_MULT;
 }
