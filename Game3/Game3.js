@@ -125,12 +125,10 @@ function drawTracks(){
     for (let i = 0; i < TRACK_ROWS; i++){
         for (let j = 0; j < TRACK_COLS; j++, counter++){
             //  choosing color according to the tracks status
-            if (trackGrid[counter] === 1)
+            if (trackGrid[counter] === TRACK_WALL)
                 canvasContext.fillStyle = 'blue';    
-            else if (trackGrid[counter] === 0)
+            else if (trackGrid[counter] === TRACK_ROAD)
                 canvasContext.fillStyle = 'black';
-            else if (trackGrid[counter] === 2)   
-                canvasContext.fillStyle = 'grey';
 
         //  drawing 
         canvasContext.fillRect((j*TRACK_W), (i*TRACK_H), TRACK_W-TRACK_GAP, TRACK_H-TRACK_GAP);
@@ -140,6 +138,10 @@ function drawTracks(){
 
 // MOVE FUNTIONS
 function moveEveryThing(){
+    carMove();
+}
+function carMove(){
+    // handle the keyboard
     if (keyHeld_Gas)
         carSpeed += DRIVE_POWER;
     if (keyHeld_Reverse)
@@ -150,12 +152,36 @@ function moveEveryThing(){
         if (keyHeld_TurnRight)
             carAng += TURN_RATE*Math.PI;
     }
-    moveCar();
-    carSpeed *= GROUNDSPEED_DECAY_MULT;
+
+    //  Only moves if the next position is not a wall
+    let nextX = carX + Math.cos(carAng) * carSpeed;
+    let nextY = carY + Math.sin(carAng) * carSpeed
+    if (checkForTrackAtPixelCoord(nextX, nextY)){
+        carX = nextX;
+        carY = nextY;
+    }else // hits the wall and bounces with 25% of the actaul speed
+        carSpeed *= -0.25;
+    
+    carSpeed *= GROUNDSPEED_DECAY_MULT;// slows gradually
 }
-function moveCar(){
-    carX += Math.cos(carAng) * carSpeed;
-    carY += Math.sin(carAng) * carSpeed;
+
+// COLLISION
+function checkForTrackAtPixelCoord(pixelX, pixelY){
+    let tileCol = Math.floor(pixelX/TRACK_W);
+    let tileRow = Math.floor(pixelY/TRACK_H);
+
+    // check if it is inside the track wall
+    if (tileCol<0 || tileCol>=TRACK_COLS || tileRow<0 || tileRow>=TRACK_ROWS)
+        return false;
+
+    let trackIndex = trackTileToIndex(tileCol, tileRow);
+
+    // if it's inside the road return true, else return false
+    return (trackGrid[trackIndex] == TRACK_ROAD);
+}
+
+function trackTileToIndex(col, row){
+    return (col + (TRACK_COLS*row));
 }
 
 // RESET FUNCTIONS
