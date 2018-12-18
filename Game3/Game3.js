@@ -3,6 +3,26 @@ var canvas;
 var canvasContext;
 const FRAMES_PER_SECOND = 30;
 
+var trackGrid =
+ [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,  	
+  1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,	
+  1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1,
+  1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1,
+  1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 	
+  1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+  1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+  1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+  1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,  	
+  1, 0, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 	
+  1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,	
+  1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1,
+  1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,	
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+const TRACK_ROAD = 0;
+const TRACK_WALL = 1;
+const TRACK_PLAYER = 2;
+
 var carPic = document.createElement("img");
 var carPicLoaded = false;
 
@@ -17,12 +37,6 @@ const KEY_LEFT_ARROW = 37;
 const KEY_UP_ARROW = 38;
 const KEY_RIGHT_ARROW = 39;
 const KEY_DOWN_ARROW = 40;
-
-var carX = 300;
-var carY = 350;
-var carAng = 0;
-var carSpeed = 1;
-
 // key beign held
 var	keyHeld_Gas	= false;
 var	keyHeld_Reverse = false;
@@ -35,32 +49,20 @@ const TRACK_GAP = 1;
 const TRACK_COLS = 20;
 const TRACK_ROWS = 15;
 
-var trackGrid =
- [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,  	
-  1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,	
-  1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1,
-  1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1,
-  1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 	
-  1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-  1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-  1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-  1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,  	
-  1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 	
-  1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,	
-  1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1,
-  1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,	
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var carX = 0;
+var carY = 0;
+var carAng = 0;
+var carSpeed = 1;
 
 // GAME
 carPic.onload = function(){
     carPicLoaded = true;
 }
-
 window.onload = function(){
     canvas = document.getElementById('gameCanvas');
     canvasContext = canvas.getContext('2d');
 
+    carReset();
     // functions
     document.addEventListener("keydown", keyPressed);
     document.addEventListener("keyup", keyReleased);
@@ -74,8 +76,7 @@ window.onload = function(){
         }, 1000/FRAMES_PER_SECOND);
 }
 
-//carSpeed += 1.5; carAng += 0.25*Math.PI;
-// keyboard functions
+// KEYBOARD FUNCTIONS
 function keyPressed(evt){
     document.getElementById("debugText").innerHTML = "KeyCode Pushed: " + evt.keyCode;
     // If key is pressed make it true
@@ -87,7 +88,6 @@ function keyReleased(evt){
     // When a key pressed is released, make it false
     setKeyHoldState(evt.keyCode, false);
 }
-
 function setKeyHoldState(thisKey, boolean){
     if (thisKey == KEY_UP_ARROW)
         keyHeld_Gas = boolean;
@@ -128,7 +128,9 @@ function drawTracks(){
             if (trackGrid[counter] === 1)
                 canvasContext.fillStyle = 'blue';    
             else if (trackGrid[counter] === 0)
-                canvasContext.fillStyle = 'black';    
+                canvasContext.fillStyle = 'black';
+            else if (trackGrid[counter] === 2)   
+                canvasContext.fillStyle = 'grey';
 
         //  drawing 
         canvasContext.fillRect((j*TRACK_W), (i*TRACK_H), TRACK_W-TRACK_GAP, TRACK_H-TRACK_GAP);
@@ -151,8 +153,29 @@ function moveEveryThing(){
     moveCar();
     carSpeed *= GROUNDSPEED_DECAY_MULT;
 }
-
 function moveCar(){
     carX += Math.cos(carAng) * carSpeed;
     carY += Math.sin(carAng) * carSpeed;
+}
+
+// RESET FUNCTIONS
+function carReset(){
+    // find the starting tile for the car
+    for (let i = 0; i < trackGrid.length; i++){
+        if (trackGrid[i] == TRACK_PLAYER){
+            let tileRow = Math.floor(i/TRACK_COLS);
+            let tileCol = i%TRACK_COLS;
+            // setting the start value
+            carX = tileCol * TRACK_W + 0.5*TRACK_W;
+            carY = tileRow * TRACK_H + 0.5*TRACK_H;
+            //  debug
+            document.getElementById("debugText").innerHTML = 
+                "Car starting at tile: ("+tileCol+", "+tileRow+")"+
+                "Pixel coordinate: ("+carX+", "+carY+")";
+            trackGrid[i] = 0;// apos achar nao precisa mais do numero especial
+            break;
+        }
+    }
+    // Make it point north
+    carAng = -0.5*Math.PI;  
 }
