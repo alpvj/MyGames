@@ -10,9 +10,10 @@ window.onload = function(){
 
     carInit(); // set the initial position, rotation...
     iniInput(); // create the keyboard events
-    imgSources(); // load images
+    loadImages(); // load images    
+}
 
-    // Game working
+function loadingDoneSoStartGame(){
     setInterval(function(){
         drawEverything();
         moveEveryThing();
@@ -21,13 +22,9 @@ window.onload = function(){
 
 // DRAW FUNCTIONS
 function drawEverything(){
-    // Draw BG
-    canvasContext.fillStyle = 'black';
-    canvasContext.fillRect(0, 0, canvas.width, canvas.height);
     // Draw tracks
     drawTracks();
-    // Draw Car if loaded
-    if(carPicLoaded)
+    // Draw Car
     carDraw();
 }
 // MOVE FUNTIONS

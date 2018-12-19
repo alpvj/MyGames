@@ -1,7 +1,7 @@
 var carX = 0;
 var carY = 0;
 var carAng = 0;
-var carSpeed = 1;
+var carSpeed = 0;
 
 const GROUNDSPEED_DECAY_MULT = 0.94;
 const DRIVE_POWER = 0.5;
@@ -22,7 +22,7 @@ function carInit(){
             document.getElementById("debugText").innerHTML = 
                 "Car starting at tile: ("+tileCol+", "+tileRow+")"+
                 "Pixel coordinate: ("+carX+", "+carY+")";
-            trackGrid[i] = 0;// apos achar nao precisa mais do numero especial
+            trackGrid[i] = TRACK_ROAD;// apos achar nao precisa mais do numero especial
             break;
         }
     }
