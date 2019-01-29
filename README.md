@@ -1,2 +1,2 @@
 # MyGames
-Alguns jogos feito e em desenvolvimento
+Alguns jogos feito e em desenvolvimento.
